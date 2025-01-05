@@ -1,0 +1,13 @@
+{
+    "users": [
+      {
+        "email": "manager@company.com",
+        "role": "manager"
+      },
+      {
+        "email": "employee@company.com", 
+        "role": "employee"
+      }
+    ],
+    "vacations": []
+  }
