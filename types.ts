@@ -2,6 +2,13 @@ export interface User {
     email: string;
     role: 'manager' | 'employee';
   }
+
+
+  export interface VacationHistory {
+    status: 'pending' | 'approved' | 'rejected';
+    timestamp: string;
+    // Optional: managerId or managerEmail could be added later
+  }
   
   export interface Vacation {
     id: string;
@@ -10,4 +17,5 @@ export interface User {
     endDate: string;
     status: 'pending' | 'approved' | 'rejected';
     requestedAt: string;
+    history?: VacationHistory[];
   }

@@ -9,5 +9,86 @@
       "role": "employee"
     }
   ],
-  "vacations": []
+  "vacations": [
+    {
+      "id": "d69fcf4f-0618-4bed-a1d4-a7cb06e7e856",
+      "employeeEmail": "employee@company.com",
+      "startDate": "2024-02-01",
+      "endDate": "2024-03-01",
+      "status": "approved",
+      "requestedAt": "2025-01-05T22:58:28.528Z"
+    },
+    {
+      "id": "22f17019-e1bd-41ac-9745-e76a6cf90882",
+      "employeeEmail": "employee@company.com",
+      "startDate": "2024-02-01",
+      "endDate": "2024-02-01",
+      "status": "rejected",
+      "requestedAt": "2025-01-05T23:00:05.661Z"
+    },
+    {
+      "id": "74b90fa0-6be5-4a4f-b768-1ec8763d01db",
+      "employeeEmail": "employee@company.com",
+      "startDate": "2024-02-01",
+      "endDate": "2024-03-01",
+      "status": "approved",
+      "requestedAt": "2025-01-05T23:00:23.909Z"
+    },
+    {
+      "id": "83c0a02a-f933-45f6-a23f-5ca254c351a9",
+      "employeeEmail": "employee@company.com",
+      "startDate": "2004-02-01",
+      "endDate": "2004-02-01",
+      "status": "approved",
+      "requestedAt": "2025-01-05T23:14:39.618Z",
+      "history": [
+        {
+          "status": "approved",
+          "timestamp": "2025-01-05T23:14:43.400Z"
+        }
+      ]
+    },
+    {
+      "id": "34131a47-5a4a-4916-b6f7-37430ab4be9b",
+      "employeeEmail": "employee@company.com",
+      "startDate": "2004-02-01",
+      "endDate": "2004-03-01",
+      "status": "approved",
+      "requestedAt": "2025-01-05T23:16:26.661Z",
+      "history": [
+        {
+          "status": "approved",
+          "timestamp": "2025-01-05T23:16:30.332Z"
+        }
+      ]
+    },
+    {
+      "id": "39a0f3eb-735b-4435-ab0a-617a10103bf5",
+      "employeeEmail": "employee@company.com",
+      "startDate": "2004-02-01",
+      "endDate": "2004-02-01",
+      "status": "approved",
+      "requestedAt": "2025-01-05T23:18:21.569Z",
+      "history": [
+        {
+          "status": "approved",
+          "timestamp": "2025-01-05T23:18:27.574Z"
+        }
+      ]
+    },
+    {
+      "id": "656a8754-dcb2-4d62-b78b-b7bedbc5bbf6",
+      "employeeEmail": "current_user@example.com",
+      "startDate": "2004-02-01",
+      "endDate": "2004-02-01",
+      "status": "approved",
+      "requestedAt": "2025-01-05T23:20:40.543Z",
+      "history": [
+        {
+          "status": "approved",
+          "timestamp": "2025-01-05T23:21:32.879Z"
+        }
+      ]
+    }
+  ]
 }
