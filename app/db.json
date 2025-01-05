@@ -1,13 +1,30 @@
 {
-    "users": [
-      {
-        "email": "manager@company.com",
-        "role": "manager"
-      },
-      {
-        "email": "employee@company.com", 
-        "role": "employee"
-      }
-    ],
-    "vacations": []
-  }
+  "users": [
+    {
+      "email": "manager@company.com",
+      "role": "manager"
+    },
+    {
+      "email": "employee@company.com",
+      "role": "employee"
+    }
+  ],
+  "vacations": [
+    {
+      "id": "a3968c91-b071-4bc4-b826-78803b448d7e",
+      "employeeEmail": "employee@company.com",
+      "startDate": "2024-01-01",
+      "endDate": "2024-02-01",
+      "status": "approved",
+      "requestedAt": "2025-01-05T22:24:28.712Z"
+    },
+    {
+      "id": "1df98aeb-07c5-425e-92af-bf16ae864c6c",
+      "employeeEmail": "employee@company.com",
+      "startDate": "2024-02-01",
+      "endDate": "2024-03-01",
+      "status": "rejected",
+      "requestedAt": "2025-01-05T22:27:25.759Z"
+    }
+  ]
+}
