@@ -1,12 +1,13 @@
 "use client"
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { getUserByEmail } from '@/lib/db'
 import { User, Vacation } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams()
   const [user, setUser] = useState<User | null>(null)
   const [email, setEmail] = useState<string | null>(null)
@@ -43,116 +44,113 @@ export default function Home() {
   )
 }
 
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
+  )
+}
+
 function EmployeeDashboard({ email }: { email: string }) {
   const [vacations, setVacations] = useState<Vacation[]>([])
   const [newVacation, setNewVacation] = useState({ startDate: '', endDate: '' })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Fetch employee's vacations
-    fetch(`/api/vacations?email=${email}&role=employee`)
-      .then(response => response.json())
-      .then(setVacations)
-      .catch(console.error)
+    async function fetchVacations() {
+      try {
+        setIsLoading(true)
+        const response = await fetch(`/api/vacations?email=${encodeURIComponent(email)}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch vacations')
+        }
+        const data = await response.json()
+        setVacations(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchVacations()
   }, [email])
 
   const handleSubmitVacation = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!newVacation.startDate || !newVacation.endDate) {
-      alert('Please select both start and end dates')
-      return
-    }
-
-    const vacationRequest: Vacation = {
-      id: uuidv4(),
-      employeeEmail: email,
-      startDate: newVacation.startDate,
-      endDate: newVacation.endDate,
-      status: 'pending',
-      requestedAt: new Date().toISOString()
-    }
-
     try {
       const response = await fetch('/api/vacations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(vacationRequest)
+        body: JSON.stringify({
+          id: uuidv4(),
+          employeeEmail: email,
+          startDate: newVacation.startDate,
+          endDate: newVacation.endDate,
+          status: 'pending',
+          requestedAt: new Date().toISOString()
+        })
       })
 
-      if (response.ok) {
-        setVacations([...vacations, vacationRequest])
-        setNewVacation({ startDate: '', endDate: '' })
-        alert('Vacation request submitted successfully!')
-      } else {
-        alert('Failed to submit vacation request')
+      if (!response.ok) {
+        throw new Error('Failed to submit vacation request')
       }
-    } catch (error) {
-      console.error('Error submitting vacation request:', error)
-      alert('An error occurred while submitting the request')
+
+      const newVacationRequest = await response.json()
+      setVacations([...vacations, newVacationRequest])
+      setNewVacation({ startDate: '', endDate: '' })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred')
     }
   }
 
+  if (isLoading) return <div>Loading vacations...</div>
+  if (error) return <div>Error: {error}</div>
+
   return (
-    <div className="max-w-4xl mx-auto bg-white/10 rounded-xl p-6 shadow-lg">
-      <h1 className="text-3xl font-bold mb-6 text-center">Vacation Request</h1>
-      <form onSubmit={handleSubmitVacation} className="space-y-4 mb-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Start Date</label>
-            <input 
-              type="date" 
-              className="w-full bg-black/50 text-white p-3 rounded-lg border border-white/20 focus:ring-2 focus:ring-blue-500"
-              value={newVacation.startDate}
-              onChange={(e) => setNewVacation({...newVacation, startDate: e.target.value})}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">End Date</label>
-            <input 
-              type="date" 
-              className="w-full bg-black/50 text-white p-3 rounded-lg border border-white/20 focus:ring-2 focus:ring-blue-500"
-              value={newVacation.endDate}
-              onChange={(e) => setNewVacation({...newVacation, endDate: e.target.value})}
-              required
-            />
-          </div>
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Employee Dashboard</h2>
+      
+      <form onSubmit={handleSubmitVacation} className="mb-6">
+        <div className="flex space-x-4">
+          <input
+            type="date"
+            value={newVacation.startDate}
+            onChange={(e) => setNewVacation({...newVacation, startDate: e.target.value})}
+            required
+            className="text-black p-2 rounded"
+          />
+          <input
+            type="date"
+            value={newVacation.endDate}
+            onChange={(e) => setNewVacation({...newVacation, endDate: e.target.value})}
+            required
+            className="text-black p-2 rounded"
+          />
+          <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Request Vacation
+          </button>
         </div>
-        <button 
-          type="submit" 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-300 ease-in-out transform hover:scale-[1.02]"
-        >
-          Submit Vacation Request
-        </button>
       </form>
 
       <div>
-        <h2 className="text-2xl font-bold mb-4">Your Vacation Requests</h2>
+        <h3 className="text-xl font-semibold mb-2">Your Vacation Requests</h3>
         {vacations.length === 0 ? (
-          <p className="text-center text-white/70">No vacation requests</p>
+          <p>No vacation requests found.</p>
         ) : (
-          <div className="space-y-2">
+          <ul>
             {vacations.map((vacation) => (
-              <div 
-                key={vacation.id} 
-                className={`p-4 rounded-lg ${
-                  vacation.status === 'pending' ? 'bg-yellow-500/20' : 
-                  vacation.status === 'approved' ? 'bg-green-500/20' : 
-                  'bg-red-500/20'
-                }`}
-              >
-                <div className="flex justify-between">
-                  <div>
-                    <p>From: {vacation.startDate}</p>
-                    <p>To: {vacation.endDate}</p>
-                  </div>
-                  <span className="font-bold uppercase">{vacation.status}</span>
-                </div>
-              </div>
+              <li key={vacation.id} className="mb-2 p-3 bg-gray-800 rounded">
+                <div>From: {vacation.startDate}</div>
+                <div>To: {vacation.endDate}</div>
+                <div>Status: {vacation.status}</div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
     </div>
@@ -160,84 +158,87 @@ function EmployeeDashboard({ email }: { email: string }) {
 }
 
 function ManagerDashboard() {
-  const [vacations, setVacations] = useState<Vacation[]>([])
+  const [pendingVacations, setPendingVacations] = useState<Vacation[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Fetch all vacations
-    fetch('/api/vacations?role=manager')
-      .then(response => response.json())
-      .then(setVacations)
-      .catch(console.error)
+    async function fetchPendingVacations() {
+      try {
+        setIsLoading(true)
+        const response = await fetch('/api/vacations?status=pending')
+        if (!response.ok) {
+          throw new Error('Failed to fetch pending vacations')
+        }
+        const data = await response.json()
+        setPendingVacations(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchPendingVacations()
   }, [])
 
-  const handleVacationAction = async (vacationId: string, status: 'approved' | 'rejected') => {
+  const handleVacationAction = async (vacationId: string, action: 'approved' | 'rejected') => {
     try {
-      const response = await fetch('/api/vacations', {
-        method: 'PUT',
+      const response = await fetch(`/api/vacations/${vacationId}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ vacationId, status })
+        body: JSON.stringify({ status: action })
       })
 
-      if (response.ok) {
-        // Update local state
-        setVacations(vacations.map(v => 
-          v.id === vacationId ? { ...v, status } : v
-        ))
-      } else {
-        alert('Failed to update vacation status')
+      if (!response.ok) {
+        throw new Error(`Failed to ${action} vacation request`)
       }
-    } catch (error) {
-      console.error('Error updating vacation status:', error)
-      alert('An error occurred while updating vacation status')
+
+      setPendingVacations(pendingVacations.filter(v => v.id !== vacationId))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred')
     }
   }
 
+  if (isLoading) return <div>Loading pending vacations...</div>
+  if (error) return <div>Error: {error}</div>
+
   return (
-    <div className="max-w-4xl mx-auto bg-white/10 rounded-xl p-6 shadow-lg">
-      <h1 className="text-3xl font-bold mb-6 text-center">Manager Vacation Dashboard</h1>
-      {vacations.length === 0 ? (
-        <p className="text-center text-white/70">No vacation requests</p>
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Manager Dashboard</h2>
+      
+      {pendingVacations.length === 0 ? (
+        <p>No pending vacation requests.</p>
       ) : (
-        <div className="space-y-4">
-          {vacations.map((vacation) => (
-            <div 
-              key={vacation.id} 
-              className={`p-4 rounded-lg ${
-                vacation.status === 'pending' ? 'bg-yellow-500/20' : 
-                vacation.status === 'approved' ? 'bg-green-500/20' : 
-                'bg-red-500/20'
-              }`}
-            >
-              <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-xl font-semibold mb-2">Pending Vacation Requests</h3>
+          <ul>
+            {pendingVacations.map((vacation) => (
+              <li key={vacation.id} className="mb-2 p-3 bg-gray-800 rounded flex justify-between items-center">
                 <div>
-                  <p>Employee: {vacation.employeeEmail}</p>
-                  <p>From: {vacation.startDate}</p>
-                  <p>To: {vacation.endDate}</p>
+                  <div>Employee: {vacation.employeeEmail}</div>
+                  <div>From: {vacation.startDate}</div>
+                  <div>To: {vacation.endDate}</div>
                 </div>
-                {vacation.status === 'pending' && (
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => handleVacationAction(vacation.id, 'approved')}
-                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                    >
-                      Approve
-                    </button>
-                    <button 
-                      onClick={() => handleVacationAction(vacation.id, 'rejected')}
-                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                )}
-                {vacation.status !== 'pending' && (
-                  <span className="font-bold uppercase">{vacation.status}</span>
-                )}
-              </div>
-            </div>
-          ))}
+                <div className="space-x-2">
+                  <button 
+                    onClick={() => handleVacationAction(vacation.id, 'approved')}
+                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                  >
+                    Approve
+                  </button>
+                  <button 
+                    onClick={() => handleVacationAction(vacation.id, 'rejected')}
+                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
